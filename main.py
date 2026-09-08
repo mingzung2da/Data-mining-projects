@@ -34,6 +34,7 @@ poverty.columns = poverty.columns.str.lower()
 # rename columns of school id
 characteristics = characteristics.rename(columns={'ncessch':'sedasch'})
 poverty = poverty.rename(columns={'ncessch':'sedasch'})
+
 # combine via inner join the tables outcomes, covariates, characteristics, and poverty using sedasch as the key(to match the rows)
 df = outcomes.merge(covariates, on='sedasch', how='inner').merge(characteristics, on='sedasch', how='inner').merge(poverty, on='sedasch', how='inner')
 print(df.shape)
@@ -76,18 +77,19 @@ for col in categorical_variables:
     # print(df_missing[col].value_counts()/len(df_missing[col]))
     print('\n')
 
-#why use categorical variable? -> We use the missing values in cs_mn_avg_ol as a filter,
-# then examine the categorical variables to understand what types of schools have missing achievement data 
+#why use categorical variable? -> We use the missing values in cs_mn_avg_ol as a filter, then examine the categorical variables to understand what types of schools have missing achievement data 
 
-# Question: why there were 0 missing values about the cs_mn_avg_ol value in the pior result, but here we found lots of missing values? 
 # remove rows with any nan
 df = df.dropna()
 print(df.shape)
+
 df
+
 # Full dataframe view
 pd.set_option('display.max_rows', None)  # Remove row limit
 pd.set_option('display.max_columns', None)  # Remove column limit
 print(df)
+
 #quick check before we work on our main dataset
 # Create a new dataframe called df_N where either gslo or gshi are 'N ' (note the space after the N)
 df_N = df[(df['gslo'] == 'N ') | (df['gshi'] == 'N ')]
@@ -105,17 +107,17 @@ for col in numerical_variables:
 
 # To me, it is not obvious, but there are only 2 of them. Let's remove them.
 df = df[df['gslo'] != 'N ']
-# Mini task 1
+
 # Make new columns called permale and perfemale which contain the fraction of students listed as male or female (using the 2017-2018 data)
 df['permale'] = df['totmenrol'] / df['total']
 df['perfemale'] = df['totfenrol'] / df['total']
 
-# Mini task 2
 # Make new columns called perurm and pernonurm which contain the fraction of students who are URM (Under Represented Minority) including Native Americans, Hispanic, and African Americans, and who are not URM including Caucasians and Asians
 df['perurm'] = (df['pernam'] + df['perhsp'] + df['perblk'])
 df['pernonurm'] = (df['perwht'] + df['perasn'])
 
 df.head()
+
 # Filter the dataframe so that type has only 'Regular School', level has only 'Middle' 'Elementary' 'High', there are no charter or magnet schools, and no virtual schools. Call the new dataframe df_filtered.
 df_filtered = df[(df['type'] == 'Regular School') & (df['level'].isin(['Middle','Elementary','High'])) & (df['charter'] == 0) & (df['magnet'] == 0) & (df['virtual'] == 'Not a virtual school')]
 
@@ -129,16 +131,18 @@ for col in numerical_variables:
     print(col)
     print(df_filtered[col].describe())
     print('\n')
+    
 # remove row where a numerical variables if outside the [0.5, 99.5] percentile range
 for col in numerical_variables:
     indlower = df_filtered[col] > df_filtered[col].quantile(0.005)
     indupper = df_filtered[col] < df_filtered[col].quantile(0.995)
     ind = indlower & indupper
     df_filtered = df_filtered[ind]   
+    
 # size of resulting dataframe
 df_filtered.shape
+
 # save dataframe to csv
 fname = data_folder + 'analyzed_seda_plus.csv'
 df_filtered.to_csv(fname, index=False)
 
-# check if the file has succesfully saved in your folder
